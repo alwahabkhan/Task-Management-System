@@ -25,6 +25,16 @@ Parse.Cloud.define('createTask', async (request) => {
   task.set('dueDate', dueDate);
 
   try {
+    const parsedDueDate = new Date(dueDate);
+    if (isNaN(parsedDueDate.getTime())) {
+      throw new Error('Invalid date format');
+    }
+    task.set('dueDate', parsedDueDate);
+  } catch (error) {
+    throw new Parse.Error(100, 'Invalid due date: ' + error.message);
+  }
+
+  try {
     const savedTask = await task.save();
     return savedTask;
   } catch (error) {

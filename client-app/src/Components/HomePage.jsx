@@ -12,11 +12,13 @@ import {
   CardActions,
 } from '@mui/material';
 
+
+
 const HomePage = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({ title: '', description: '', dueDate: '' });
 
-useEffect(() => {
+  useEffect(() => {
     const fetchTasks = async () => {
       try {
         const query = new Parse.Query('Tasks');
@@ -29,13 +31,12 @@ useEffect(() => {
         console.error('Error fetching tasks:', error);
       }
     };
-  
+
     fetchTasks();
-  
-    // Set up Live Query
+
     let subscription = null;
     const query = new Parse.Query('Tasks');
-  
+
     query.subscribe()
       .then((sub) => {
         subscription = sub;
@@ -44,7 +45,6 @@ useEffect(() => {
         sub.on('delete', fetchTasks);
       })
       .catch((error) => console.error('Error subscribing to Live Query:', error));
-  
 
     return () => {
       if (subscription) {
@@ -56,32 +56,47 @@ useEffect(() => {
   }, []);
 
   const handleAddTask = async () => {
-    const Task = Parse.Object.extend('Tasks');
-    const task = new Task();
+    try {
+      const newTaskData = {
+        title: newTask.title,
+        description: newTask.description,
+        dueDate: newTask.dueDate,
+        status: 'pending',
+      };
 
-    task.set('title', newTask.title);
-    task.set('description', newTask.description);
-    task.set('dueDate', new Date(newTask.dueDate));
-    task.set('status', 'pending');
-
-    await task.save();
-    setNewTask({ title: '', description: '', dueDate: '' });
+      const result = await Parse.Cloud.run('createTask', newTaskData);
+      console.log('Task created:', result);
+      setNewTask({ title: '', description: '', dueDate: '' });
+    } catch (error) {
+      console.error('Error creating task:', error);
+    }
   };
+
 
   const handleUpdateTask = async (id, status) => {
-    const query = new Parse.Query('Tasks');
-    const task = await query.get(id);
+    try {
+      const updateData = {
+        taskId: id,
+        status: status,
+      };
 
-    task.set('status', status);
-    await task.save();
+      const result = await Parse.Cloud.run('updateTask', updateData);
+      console.log('Task updated:', result);
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
   };
+
 
   const handleDeleteTask = async (id) => {
-    const query = new Parse.Query('Tasks');
-    const task = await query.get(id);
-
-    await task.destroy();
+    try {
+      const result = await Parse.Cloud.run('deleteTask', { taskId: id });
+      console.log('Task deleted:', result);
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
+
 
   return (
     <Container maxWidth="md">
@@ -136,7 +151,7 @@ useEffect(() => {
         </Grid>
       </Box>
 
-      {/* Task List */}
+
       <Typography variant="h4" gutterBottom>
         Tasks
       </Typography>

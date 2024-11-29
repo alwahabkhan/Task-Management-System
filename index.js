@@ -32,11 +32,6 @@ if (!process.env.TESTING) {
   app.use(mountPath, server.app);
 }
 
-cron.schedule('******',function(){
-
-})
-
-
 app.get('/', function (req, res) {
   res.status(200).send('I dream of being a website.  Please star the parse-server repo on GitHub!');
 });
